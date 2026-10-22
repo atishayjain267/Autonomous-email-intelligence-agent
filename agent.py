@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from auth import get_gmail_service
 from langgraph.graph import StateGraph, END
@@ -6,6 +7,9 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from typing import TypedDict, List
 from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
+
+# Load environment variables from .env file
+load_dotenv()
 
 # 1. Define Pydantic schema for structured output classification
 class EmailClassification(BaseModel):
@@ -21,7 +25,6 @@ def fetch_emails(state: AgentState):
     print("--- FETCHING UNREAD EMAILS ---")
     creds = get_gmail_service()
     service = build('gmail', 'v1', credentials=creds)
-    # Broadened query to catch any unread message across all tabs
     results = service.users().messages().list(userId='me', q='is:unread', maxResults=5).execute()
     messages = results.get('messages', [])
     
@@ -98,11 +101,39 @@ with SqliteSaver.from_conn_string("agent_state.db") as memory:
     workflow.add_edge("classify_emails", "execute_actions")
     workflow.add_edge("execute_actions", END)
 
-    app = workflow.compile(checkpointer=memory)
+    # Compile graph with interrupt before executing actions
+    app = workflow.compile(checkpointer=memory, interrupt_before=["execute_actions"])
 
     if __name__ == "__main__":
         print("Running Autonomous Agent with Gemini & SQLite Persistence...")
         config = {"configurable": {"thread_id": "1"}}
-        initial_state = {"messages": [], "classified_emails": [], "action_logs": []}
-        result = app.invoke(initial_state, config)
-        print("\nWorkflow Finished Successfully! State saved to agent_state.db.")
+        
+        # Check if an existing paused state exists
+        current_state = app.get_state(config)
+        
+        if not current_state.values.get("messages"):
+            # First run: start from scratch
+            initial_state = {"messages": [], "classified_emails": [], "action_logs": []}
+            result = app.invoke(initial_state, config)
+        else:
+            print("\nResuming from saved state...")
+            result = current_state.values
+
+        # Check if we hit the interrupt before execute_actions
+        next_steps = app.get_state(config).next
+        if "execute_actions" in next_steps:
+            print("\n--- 🛑 HUMAN-IN-THE-LOOP APPROVAL REQUIRED ---")
+            classified_list = app.get_state(config).values.get("classified_emails", [])
+            
+            print(f"Agent has classified {len(classified_list)} emails and is ready to take action.")
+            user_approval = input("Do you want to approve these Gmail actions? (y/n): ").strip().lower()
+            
+            if user_approval == 'y':
+                print("\nApproving actions... Resuming workflow.")
+                # Pass None to continue execution from the interrupted node
+                final_result = app.invoke(None, config)
+                print("\nWorkflow Finished Successfully! State saved to agent_state.db.")
+            else:
+                print("\nExecution aborted by user. No actions were taken.")
+        else:
+            print("\nWorkflow Finished Successfully!")
