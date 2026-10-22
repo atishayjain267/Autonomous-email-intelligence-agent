@@ -21,6 +21,7 @@ Autonomous-email-intelligence-agent/
 ├── agent_state.db    # SQLite state persistence checkpointing (git-ignored)
 ├── credentials.json  # Google Cloud OAuth credentials (git-ignored)
 ├── token.json        # User access/refresh tokens (git-ignored)
+├── requirements.txt  # Python dependencies
 ├── .gitignore        # Security configuration for sensitive files
 └── README.md         # Project documentation
 ```
