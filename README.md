@@ -24,3 +24,24 @@ Autonomous-email-intelligence-agent/
 ├── .gitignore        # Security configuration for sensitive files
 └── README.md         # Project documentation
 ```
+## ⚙️ Setup & Run
+
+1. **Install dependencies**
+```bash
+   pip install -r requirements.txt
+```
+
+2. **Add Gmail credentials**
+   - In Google Cloud Console, create a project and enable the **Gmail API**.
+   - Create an **OAuth client ID** (Desktop app) and download it as `credentials.json`.
+   - Place `credentials.json` in the project folder. (It is git-ignored and never uploaded.)
+
+3. **Set your Gemini API key** as an environment variable
+   - Windows (PowerShell): `$env:GOOGLE_API_KEY="your-key-here"`
+   - macOS/Linux: `export GOOGLE_API_KEY="your-key-here"`
+
+4. **Run the agent**
+```bash
+   python agent.py
+```
+   
