@@ -5,7 +5,7 @@ An AI-powered autonomous email triage system built with Python, LangGraph, Googl
 ## 🚀 Architecture & Tech Stack
 
 1. **Orchestration**: Built using **LangGraph** to manage stateful, multi-step agent workflows.
-2. **Intelligence**: Secure Gmail API (OAuth 2.0) integration to fetch unread messages, draft replies for human review, and automate inbox actions (archiving, updating labels, or marking as read).
+2. **Intelligence**: Secure **Gmail API (OAuth 2.0)** integration to fetch unread messages, draft replies for human review, and automate inbox actions (archiving, updating labels, or marking as read).
 3. **Integration**: Secure **Gmail API (OAuth 2.0)** integration to fetch unread messages and executes automated drafts replies for human review (archiving, updating labels, or marking as read).
 4. **Persistence**: Utilizes **SQLite** (`agent_state.db`) via `SqliteSaver` to maintain workflow state and execution logs securely.
 
